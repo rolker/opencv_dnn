@@ -15,7 +15,7 @@ find_package(OpenCV 4 REQUIRED )
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES asv_helm
-  CATKIN_DEPENDS  roscpp cv_bridge
+  CATKIN_DEPENDS  roscpp cv_bridge darknet_ros_msgs
 #  DEPENDS system_lib
 )
 
@@ -26,6 +26,7 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}_node src/opencv_dnn.cpp)
+add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(${PROJECT_NAME}_node
     ${OpenCV_LIBS}
