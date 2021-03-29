@@ -58,10 +58,8 @@ public:
         m_boundingBoxesPublisher =
         nodeHandle.advertise<darknet_ros_msgs::BoundingBoxes>(boundingBoxesTopicName, 1, 0);
 
-        std::string cameraTopicName;
-        nodeHandle.param("subscribers/camera_reading/topic", cameraTopicName, std::string("/camera/image_raw"));
-        
-        m_imageSubscriber = nodeHandle.subscribe(cameraTopicName, 1, &ROSOpenCVDNN::imageCallback, this);
+        ros::NodeHandle nh; // non-private node handle        
+        m_imageSubscriber = nh.subscribe("image", 1, &ROSOpenCVDNN::imageCallback, this);
         
     }
 
