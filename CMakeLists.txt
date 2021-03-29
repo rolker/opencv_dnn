@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   darknet_ros_msgs
   cv_bridge
   sensor_msgs
+  image_transport
 )
 
 find_package(OpenCV 4 REQUIRED )
@@ -15,7 +16,7 @@ find_package(OpenCV 4 REQUIRED )
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES asv_helm
-  CATKIN_DEPENDS  roscpp cv_bridge darknet_ros_msgs
+  CATKIN_DEPENDS  roscpp cv_bridge darknet_ros_msgs image_transport
 #  DEPENDS system_lib
 )
 

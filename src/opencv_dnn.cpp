@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/Image.h>
 #include <darknet_ros_msgs/BoundingBoxes.h>
@@ -46,20 +47,16 @@ public:
         m_net = cv::dnn::readNetFromDarknet(configPath, weightsPath);
         m_output_names = m_net.getUnconnectedOutLayersNames();
         
-        std::string detectionImageTopicName;
-        nodeHandle.param("publishers/detection_image/topic", detectionImageTopicName, std::string("detection_image"));
-
-        m_detectionImagePublisher =
-        nodeHandle.advertise<sensor_msgs::Image>(detectionImageTopicName, 1, 0);
-        
-        std::string boundingBoxesTopicName;
-        nodeHandle.param("publishers/bounding_boxes/topic", boundingBoxesTopicName, std::string("bounding_boxes"));
-        
         m_boundingBoxesPublisher =
-        nodeHandle.advertise<darknet_ros_msgs::BoundingBoxes>(boundingBoxesTopicName, 1, 0);
-
+        nodeHandle.advertise<darknet_ros_msgs::BoundingBoxes>("bounding_boxes", 1, 0);
+        
         ros::NodeHandle nh; // non-private node handle        
-        m_imageSubscriber = nh.subscribe("image", 1, &ROSOpenCVDNN::imageCallback, this);
+
+        image_transport::ImageTransport it(nh);
+
+        m_detectionImagePublisher = it.advertise("detection_image", 1, 0);
+        
+        m_imageSubscriber = it.subscribe("image", 1, &ROSOpenCVDNN::imageCallback, this);
         
     }
 
@@ -69,8 +66,8 @@ private:
     cv::dnn::Net m_net;
     std::vector<std::string> m_output_names;
     ros::Publisher m_boundingBoxesPublisher;
-    ros::Publisher m_detectionImagePublisher;
-    ros::Subscriber m_imageSubscriber;
+    image_transport::Publisher m_detectionImagePublisher;
+    image_transport::Subscriber m_imageSubscriber;
     
     void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     {
