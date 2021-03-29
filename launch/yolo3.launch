@@ -1,0 +1,7 @@
+<launch>
+  <node pkg="opencv_dnn" type="opencv_dnn_node" name="yolo3">
+    <param name="yolo_model/weight_file/name" value="yolov3.weights"/>
+    <param name="weights_path" value="$(find opencv_dnn)/config"/>
+    <param name="yolo_model/config_file/name" value="yolov3.cfg"/>
+    <param name="config_path" value="$(find opencv_dnn)/config"/>
+</launch>
