@@ -44,7 +44,9 @@ public:
         
         ROS_INFO(configPath.c_str());
         ROS_INFO(weightsPath.c_str());
-        m_net = cv::dnn::readNetFromDarknet(configPath, weightsPath);
+        m_net = cv::dnn::readNet(weightsPath, configPath);
+        m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+        m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
         m_output_names = m_net.getUnconnectedOutLayersNames();
         
         m_boundingBoxesPublisher =
