@@ -54,11 +54,11 @@ public:
         
         ros::NodeHandle nh; // non-private node handle        
 
-        image_transport::ImageTransport it(nh);
+        m_image_transport = std::shared_ptr<image_transport::ImageTransport>(new image_transport::ImageTransport(nh));
 
-        m_detectionImagePublisher = it.advertise("detection_image", 1, 0);
+        m_detectionImagePublisher = m_image_transport->advertise("detection_image", 1, 0);
         
-        m_imageSubscriber = it.subscribe("image", 1, &ROSOpenCVDNN::imageCallback, this);
+        m_imageSubscriber = m_image_transport->subscribe("image", 1, &ROSOpenCVDNN::imageCallback, this);
         
     }
 
@@ -70,6 +70,7 @@ private:
     ros::Publisher m_boundingBoxesPublisher;
     image_transport::Publisher m_detectionImagePublisher;
     image_transport::Subscriber m_imageSubscriber;
+    std::shared_ptr<image_transport::ImageTransport> m_image_transport;
     
     void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     {
@@ -179,7 +180,9 @@ private:
         cv::rectangle(cv_ptr->image, cv::Point(0, 0), cv::Point(stats_bg_sz.width, stats_bg_sz.height + 10), cv::Scalar(0, 0, 0), cv::FILLED);
         cv::putText(cv_ptr->image, stats.c_str(), cv::Point(0, stats_bg_sz.height + 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(255, 255, 255));
 
-        m_detectionImagePublisher.publish(cv_ptr->toImageMsg());
+        ROS_DEBUG_STREAM(stats_ss.str());
+        sensor_msgs::ImagePtr out_msg = cv_ptr->toImageMsg();
+        m_detectionImagePublisher.publish(out_msg);
     }
 };
 
