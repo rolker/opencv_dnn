@@ -1,0 +1,11 @@
+<launch>
+  <arg name="namespace" default="opencv_dnn"/>
+  <arg name="image" default="image"/>
+
+  <rosparam command="load" file="$(find opencv_dnn)/config/yolov4.yaml" ns="$(arg namespace)/yolo4"/>
+  <node pkg="opencv_dnn" type="opencv_dnn_node" name="yolo4" ns="$(arg namespace)">
+    <param name="weights_path" value="$(find opencv_dnn)/config"/>
+    <param name="config_path" value="$(find opencv_dnn)/config"/>
+    <remap from="image" to="$(arg image)"/>
+  </node>
+</launch>
