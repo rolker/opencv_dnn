@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
 )
 
-find_package(OpenCV 4 REQUIRED )
+find_package(OpenCV 4.5 REQUIRED )
 
 catkin_package(
 #  INCLUDE_DIRS include
