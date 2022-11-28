@@ -4,11 +4,11 @@ project(opencv_dnn)
 add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  darknet_ros_msgs
   cv_bridge
-  sensor_msgs
   image_transport
+  roscpp
+  sensor_msgs
+  vision_msgs
 )
 
 find_package(OpenCV 4.5 REQUIRED )
@@ -16,7 +16,7 @@ find_package(OpenCV 4.5 REQUIRED )
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES asv_helm
-  CATKIN_DEPENDS  roscpp cv_bridge darknet_ros_msgs image_transport
+  CATKIN_DEPENDS  roscpp cv_bridge vision_msgs image_transport
 #  DEPENDS system_lib
 )
 

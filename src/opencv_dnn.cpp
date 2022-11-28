@@ -2,7 +2,8 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/Image.h>
-#include <darknet_ros_msgs/BoundingBoxes.h>
+#include <vision_msgs/Detection2DArray.h>
+#include <vision_msgs/create_aabb.h>
 
 #include <opencv2/core.hpp>
 #include <opencv2/dnn.hpp>
@@ -28,29 +29,35 @@ public:
     {
         ros::NodeHandle nodeHandle("~");
 
-        nodeHandle.param("yolo_model/detection_classes/names", m_classLabels, std::vector<std::string>(0));
+        nodeHandle.param("detection_classes/names", m_classLabels, std::vector<std::string>(0));
+        nodeHandle.param("threshold/value", m_threshold, (float)0.3);
         
-        nodeHandle.param("yolo_model/threshold/value", m_threshold, (float)0.3);
+        std::string model, model_path;
+        nodeHandle.param("model", model, std::string("yolov2-tiny.weights"));
+        nodeHandle.param("model_path", model_path, std::string(""));
+        if(!model_path.empty())
+            model = model_path + "/" + model;
         
-        std::string weightsModel, weightsPath;
-        nodeHandle.param("yolo_model/weight_file/name", weightsModel, std::string("yolov2-tiny.weights"));
-        nodeHandle.param("weights_path", weightsPath, std::string("/default"));
-        weightsPath += "/" + weightsModel;
+        std::string configuration, configuration_path;
+        nodeHandle.param("configuration", configuration, std::string("yolov2-tiny.cfg"));
+        nodeHandle.param("configuration_path", configuration_path, std::string(""));
+        if(!configuration_path.empty())
+            configuration = configuration_path + "/" + configuration;
         
-        std::string configModel, configPath;
-        nodeHandle.param("yolo_model/config_file/name", configModel, std::string("yolov2-tiny.cfg"));
-        nodeHandle.param("config_path", configPath, std::string("/default"));
-        configPath += "/" + configModel;
-        
-        ROS_INFO(configPath.c_str());
-        ROS_INFO(weightsPath.c_str());
-        m_net = cv::dnn::readNet(weightsPath, configPath);
+        nodeHandle.param("input/width", m_width, m_width);
+        nodeHandle.param("input/width", m_height, m_height);
+
+        ROS_INFO_STREAM("model: " << model);
+        ROS_INFO_STREAM("configuration: " << configuration);
+        ROS_INFO_STREAM("input size: " << m_width << " x " << m_height);
+
+        m_net = cv::dnn::readNet(model, configuration);
         m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
         m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
         m_output_names = m_net.getUnconnectedOutLayersNames();
         
-        m_boundingBoxesPublisher =
-        nodeHandle.advertise<darknet_ros_msgs::BoundingBoxes>("bounding_boxes", 1, 0);
+        m_detectionsPublisher =
+        nodeHandle.advertise<vision_msgs::Detection2DArray>("detections", 1, 0);
         
         ros::NodeHandle nh; // non-private node handle        
 
@@ -67,10 +74,12 @@ private:
     float m_threshold;
     cv::dnn::Net m_net;
     std::vector<std::string> m_output_names;
-    ros::Publisher m_boundingBoxesPublisher;
+    ros::Publisher m_detectionsPublisher;
     image_transport::Publisher m_detectionImagePublisher;
     image_transport::Subscriber m_imageSubscriber;
     std::shared_ptr<image_transport::ImageTransport> m_image_transport;
+    int m_width = 0;
+    int m_height = 0;
     
     void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     {
@@ -88,7 +97,7 @@ private:
         cv::Mat blob;
         std::vector<cv::Mat> detections;
         auto total_start = std::chrono::steady_clock::now();
-        cv::dnn::blobFromImage(cv_ptr->image, blob, 0.00392, cv::Size(608, 608), cv::Scalar(), true, false, CV_32F);
+        cv::dnn::blobFromImage(cv_ptr->image, blob, 0.00392, cv::Size(m_width, m_height), cv::Scalar(), true, false, CV_32F);
         m_net.setInput(blob);
         
         auto dnn_start = std::chrono::steady_clock::now();
@@ -128,10 +137,8 @@ private:
         for (int c = 0; c < m_classLabels.size(); c++)
             cv::dnn::NMSBoxes(boxes[c], scores[c], 0.0, NMS_THRESHOLD, indices[c]);
 
-        darknet_ros_msgs::BoundingBoxes boundingBoxesResults;
-        boundingBoxesResults.header.stamp = ros::Time::now();
-        boundingBoxesResults.header.frame_id = "detection";
-        boundingBoxesResults.image_header = msg->header;
+        vision_msgs::Detection2DArray detections_msg;
+        detections_msg.header = msg->header;
 
         for (int c= 0; c < m_classLabels.size(); c++)
         {
@@ -152,21 +159,22 @@ private:
                 cv::rectangle(cv_ptr->image, cv::Point(rect.x, rect.y - label_bg_sz.height - baseline - 10), cv::Point(rect.x + label_bg_sz.width, rect.y), color, cv::FILLED);
                 cv::putText(cv_ptr->image, label.c_str(), cv::Point(rect.x, rect.y - baseline - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 0));
                 
-                darknet_ros_msgs::BoundingBox boundingBox;
-                boundingBox.Class = m_classLabels[c];
-                boundingBox.id = c;
-                boundingBox.probability = scores[c][idx];
-                boundingBox.xmin = rect.x;
-                boundingBox.ymin = rect.y;
-                boundingBox.xmax = rect.x+rect.width;
-                boundingBox.ymax = rect.y+rect.height;
-                boundingBoxesResults.bounding_boxes.push_back(boundingBox);
+                vision_msgs::Detection2D detection;
+                detection.header = msg->header;
+                detection.bbox = vision_msgs::createAABB2D(rect.x, rect.y, rect.width, rect.height);
+
+                vision_msgs::ObjectHypothesisWithPose hypothesis;
+                hypothesis.id = c;
+                hypothesis.score = scores[c][idx];
+
+                detection.results.push_back(hypothesis);
+                detections_msg.detections.push_back(detection);
             }
         }
     
         auto total_end = std::chrono::steady_clock::now();
         
-        m_boundingBoxesPublisher.publish(boundingBoxesResults);
+        m_detectionsPublisher.publish(detections_msg);
 
         float inference_fps = 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(dnn_end - dnn_start).count();
         float total_fps = 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(total_end - total_start).count();
