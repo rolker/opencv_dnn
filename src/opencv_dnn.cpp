@@ -51,7 +51,16 @@ public:
         ROS_INFO_STREAM("configuration: " << configuration);
         ROS_INFO_STREAM("input size: " << m_width << " x " << m_height);
 
-        m_net = cv::dnn::readNet(model, configuration);
+        try
+        {
+            m_net = cv::dnn::readNet(model, configuration);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            exit(1);
+        }
+        
         m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
         m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
         m_output_names = m_net.getUnconnectedOutLayersNames();
