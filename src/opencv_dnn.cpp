@@ -208,7 +208,7 @@ std::string configPath;
 
 int main(int argc, char* argv[])
 {
-    ros::init(argc, argv, "darknet_ros");
+    ros::init(argc, argv, "opencv_dnn");
     
     ROSOpenCVDNN dnn;
     
