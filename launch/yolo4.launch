@@ -1,5 +1,5 @@
 <launch>
-  <rosparam command="load" file="$(find opencv_dnn)/config/yolov4.yaml"/>
+  <rosparam command="load" file="$(find opencv_dnn)/config/yolov4.yaml" ns="yolo4"/>
   <node pkg="opencv_dnn" type="opencv_dnn_node" name="yolo4">
     <param name="model_path" value="$(find opencv_dnn)/config"/>
     <param name="configuration_path" value="$(find opencv_dnn)/config"/>
