@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <std_msgs/String.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/Image.h>
@@ -30,6 +31,20 @@ public:
         ros::NodeHandle nodeHandle("~");
 
         nodeHandle.param("detection_classes/names", m_classLabels, std::vector<std::string>(0));
+        std::stringstream label_yaml;
+        label_yaml << "[";
+        for(int i = 0; i < m_classLabels.size(); ++i)
+        {
+            label_yaml << m_classLabels[i];
+            if(i < m_classLabels.size()-1)
+                label_yaml << ", ";
+        }
+        label_yaml << "]";
+        m_classLabelsYaml.data = label_yaml.str();
+        m_classLabelsPublisher =
+        nodeHandle.advertise<std_msgs::String>("class_labels", 1, 0);
+
+
         nodeHandle.param("threshold/value", m_threshold, (float)0.3);
         
         std::string model, model_path;
@@ -75,7 +90,8 @@ public:
         m_detectionImagePublisher = m_image_transport->advertise("detection_image", 1, 0);
         
         m_imageSubscriber = m_image_transport->subscribe("image", 1, &ROSOpenCVDNN::imageCallback, this);
-        
+
+        m_classLabelsTimer = nodeHandle.createTimer(ros::Duration(2.0), &ROSOpenCVDNN::sendClassesTimerCallback, this);   
     }
 
 private:
@@ -89,6 +105,16 @@ private:
     std::shared_ptr<image_transport::ImageTransport> m_image_transport;
     int m_width = 0;
     int m_height = 0;
+
+    std_msgs::String m_classLabelsYaml;
+    ros::Publisher m_classLabelsPublisher;
+    ros::Timer m_classLabelsTimer;
+
+
+    void sendClassesTimerCallback(const ros::TimerEvent& event)
+    {
+        m_classLabelsPublisher.publish(m_classLabelsYaml);
+    }
     
     void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     {
