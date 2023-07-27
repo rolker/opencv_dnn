@@ -1,0 +1,9 @@
+<launch>
+  <include file="$(find opencv_dnn)/launch/yolov5x.launch">
+    <arg name="namespace" value="johnny5"/>
+    <arg name="image" value="/molab/sensors/johnny5/camera/image_raw/compressed"/>
+  </include>
+
+</launch>
+
+

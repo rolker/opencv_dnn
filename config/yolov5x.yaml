@@ -1,0 +1,11 @@
+model: yolov5x.onnx
+threshold:
+  value: 0.3
+input:
+  width: 640
+  height: 640
+detection_classes:
+  names:
+    - marine_thing_1
+    - marine_thing_2
+    - marine_thing_3

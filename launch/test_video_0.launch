@@ -27,7 +27,7 @@
         <arg name="visualize" value="false" />
    </include>
 
-  <include file="$(find opencv_dnn)/launch/yolo4.launch">
+  <include file="$(find opencv_dnn)/launch/yolov5x.launch">
     <arg name="namespace" value="webcam"/>
     <arg name="image" value="image_raw"/>
   </include>

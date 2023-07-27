@@ -48,15 +48,15 @@ public:
         nodeHandle.param("threshold/value", m_threshold, (float)0.3);
         
         std::string model, model_path;
-        nodeHandle.param("model", model, std::string("yolov2-tiny.weights"));
+        nodeHandle.param("model", model, std::string()); //, std::string("yolov2-tiny.weights"));
         nodeHandle.param("model_path", model_path, std::string(""));
         if(!model_path.empty())
             model = model_path + "/" + model;
         
         std::string configuration, configuration_path;
-        nodeHandle.param("configuration", configuration, std::string("yolov2-tiny.cfg"));
+        nodeHandle.param("configuration", configuration, std::string());
         nodeHandle.param("configuration_path", configuration_path, std::string(""));
-        if(!configuration_path.empty())
+        if(!configuration.empty() && !configuration_path.empty())
             configuration = configuration_path + "/" + configuration;
         
         nodeHandle.param("input/width", m_width, m_width);
@@ -68,7 +68,10 @@ public:
 
         try
         {
-            m_net = cv::dnn::readNet(model, configuration);
+            if(configuration.empty())
+                m_net = cv::dnn::readNet(model);
+            else
+                m_net = cv::dnn::readNet(model, configuration);
         }
         catch(const std::exception& e)
         {
@@ -76,8 +79,8 @@ public:
             exit(1);
         }
         
-        m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-        m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+        //m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+       // m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
         m_output_names = m_net.getUnconnectedOutLayersNames();
         
         m_detectionsPublisher =
