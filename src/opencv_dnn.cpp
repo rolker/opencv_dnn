@@ -48,7 +48,7 @@ public:
         nodeHandle.param("threshold/value", m_threshold, (float)0.3);
         
         std::string model, model_path;
-        nodeHandle.param("model", model, std::string()); //, std::string("yolov2-tiny.weights"));
+        nodeHandle.param("model", model, std::string());
         nodeHandle.param("model_path", model_path, std::string(""));
         if(!model_path.empty())
             model = model_path + "/" + model;
@@ -59,12 +59,9 @@ public:
         if(!configuration.empty() && !configuration_path.empty())
             configuration = configuration_path + "/" + configuration;
         
-        nodeHandle.param("input/width", m_width, m_width);
-        nodeHandle.param("input/width", m_height, m_height);
 
         ROS_INFO_STREAM("model: " << model);
         ROS_INFO_STREAM("configuration: " << configuration);
-        ROS_INFO_STREAM("input size: " << m_width << " x " << m_height);
 
         try
         {
@@ -78,9 +75,25 @@ public:
             std::cerr << e.what() << '\n';
             exit(1);
         }
-        
+
+        cv::dnn::MatShape net_input_shape;
+        std::vector<cv::dnn::MatShape> in_shapes;
+        std::vector<cv::dnn::MatShape> out_shapes;
+        m_net.getLayerShapes(net_input_shape, 0, in_shapes, out_shapes);
+        if(!in_shapes.empty())
+            if(in_shapes.front().size() == 4)
+            {
+                m_width = in_shapes.front()[2];
+                m_height = in_shapes.front()[3];
+            }
+        ROS_INFO_STREAM("guessed input size: " << m_width << " x " << m_height);
+
+        nodeHandle.param("input/width", m_width, m_width);
+        nodeHandle.param("input/width", m_height, m_height);
+        ROS_INFO_STREAM("input size: " << m_width << " x " << m_height);
+
         //m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
-       // m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+        // m_net.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
         m_output_names = m_net.getUnconnectedOutLayersNames();
         
         m_detectionsPublisher =
