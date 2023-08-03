@@ -1,0 +1,18 @@
+<launch>
+  <arg name="model" default="$(find opencv_dnn)/config/yolo.onnx"/>
+  <arg name="threshold" default="0.3"/>
+  <arg name="bag_file"/>
+  <arg name="image_topic" default="image"/>
+  <arg name="start_time" default="0"/>
+
+
+  <node pkg="rosbag" type="play" name="bagplay" args="--start=$(arg start_time) --loop $(arg bag_file)">
+  </node>
+
+  <node pkg="opencv_dnn" type="opencv_dnn_node" name="yolo">
+    <param name="model" value="$(arg model)"/>
+    <param name="threshold" value="$(arg threshold)"/>
+    <remap from="image" to="$(arg image_topic)"/>
+  </node>
+
+</launch>

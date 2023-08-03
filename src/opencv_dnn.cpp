@@ -41,8 +41,7 @@ public:
         }
         label_yaml << "]";
         m_classLabelsYaml.data = label_yaml.str();
-        m_classLabelsPublisher =
-        nodeHandle.advertise<std_msgs::String>("class_labels", 1, 0);
+        m_classLabelsPublisher = nodeHandle.advertise<std_msgs::String>("class_labels", 1, 0);
 
 
         nodeHandle.param("threshold", m_threshold, (float)0.3);
@@ -90,7 +89,7 @@ public:
         ROS_INFO_STREAM("guessed input size: " << m_width << " x " << m_height);
 
         nodeHandle.param("input/width", m_width, m_width);
-        nodeHandle.param("input/width", m_height, m_height);
+        nodeHandle.param("input/height", m_height, m_height);
         ROS_INFO_STREAM("input size: " << m_width << " x " << m_height);
 
         //m_net.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
@@ -116,8 +115,7 @@ public:
             }
         }
 
-        m_detectionsPublisher =
-        nodeHandle.advertise<vision_msgs::Detection2DArray>("detections", 1, 0);
+        m_detectionsPublisher = nodeHandle.advertise<vision_msgs::Detection2DArray>("detections", 1, 0);
         
         ros::NodeHandle nh; // non-private node handle        
 
@@ -158,7 +156,7 @@ private:
         cv_bridge::CvImagePtr cv_ptr;
         try
         {
-            cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+            cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::RGB8);
         }
         catch (cv_bridge::Exception& e)
         {
@@ -169,7 +167,7 @@ private:
         cv::Mat blob;
         std::vector<cv::Mat> detections;
         auto total_start = std::chrono::steady_clock::now();
-        cv::dnn::blobFromImage(cv_ptr->image, blob, 0.00392, cv::Size(m_width, m_height), cv::Scalar(), true, false, CV_32F);
+        cv::dnn::blobFromImage(cv_ptr->image, blob, 0.00392, cv::Size(m_width, m_height), cv::Scalar(), false , false, CV_32F);
         m_net.setInput(blob);
         
         auto dnn_start = std::chrono::steady_clock::now();
@@ -198,11 +196,11 @@ private:
                         cv::Rect rect(x - width/2, y - height/2, width, height);
                         //ROS_INFO_STREAM("  x,y: " << x << "," << y << " size: " << width << "x" << height);
                         for(int class_id = 0; class_id < class_count; class_id++)
-                            if(detection.at<float>(i,j,4+class_id) > m_threshold)
+                            if(detection.at<float>(i,j,5+class_id) > m_threshold)
                             {
                                //ROS_INFO_STREAM("  class: " << class_id << " conf: " << detection.at<float>(i,j,4+class_id));
                                 boxes[class_id].push_back(rect);
-                                scores[class_id].push_back(detection.at<float>(i,j,4+class_id));
+                                scores[class_id].push_back(detection.at<float>(i,j,5+class_id));
                             }
            
                     }
@@ -276,9 +274,6 @@ private:
         m_detectionImagePublisher.publish(out_msg);
     }
 };
-
-std::string weightsPath;
-std::string configPath;
 
 int main(int argc, char* argv[])
 {
