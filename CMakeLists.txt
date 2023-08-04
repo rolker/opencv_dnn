@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(opencv_dnn)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
@@ -12,11 +12,12 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(OpenCV 4.5 REQUIRED )
+find_package(Protobuf REQUIRED)
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES asv_helm
-  CATKIN_DEPENDS  roscpp cv_bridge vision_msgs image_transport
+  CATKIN_DEPENDS  roscpp cv_bridge protobuf-dev vision_msgs image_transport
 #  DEPENDS system_lib
 )
 
@@ -24,14 +25,20 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${PROTOBUF_INCLUDE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_executable(${PROJECT_NAME}_node src/opencv_dnn.cpp)
+PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER src/onnx/onnx.proto)
+
+add_executable(${PROJECT_NAME}_node src/opencv_dnn.cpp ${PROTO_SRC})
 add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(${PROJECT_NAME}_node
     ${OpenCV_LIBS}
     ${catkin_LIBRARIES}
+    ${Protobuf_LIBRARIES}
+    yaml-cpp
 )
 
 install(TARGETS ${PROJECT_NAME}_node
