@@ -48,7 +48,8 @@ Without cuda:
 With cuda:
 
     cmake ../ -D CMAKE_INSTALL_PREFIX=~/.local -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -D OPENCV_DNN_CUDA=ON -D WITH_CUDA=ON
-
+OR with cuda but leaner for faster build:
+    cmake ../ -D CMAKE_INSTALL_PREFIX=~/.local -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules -D OPENCV_DNN_CUDA=ON -D WITH_CUDA=ON -D BUILD_opencv_python2=OFF -D BUILD_opencv_python3=OFF -D BUILD_TESTS=OFF
 
     make -j4
     make install
