@@ -10,6 +10,10 @@
 #include <opencv2/dnn.hpp>
 #include <opencv2/dnn/all_layers.hpp>
 
+#include <fstream>
+#include "onnx.pb.h"
+#include <yaml-cpp/yaml.h>
+
 // based on darknet_ros and
 // https://gist.github.com/YashasSamaga/e2b19a6807a13046e399f4bc3cca3a49
 
@@ -30,20 +34,6 @@ public:
     {
         ros::NodeHandle nodeHandle("~");
 
-        nodeHandle.param("detection_classes/names", m_classLabels, std::vector<std::string>(0));
-        std::stringstream label_yaml;
-        label_yaml << "[";
-        for(int i = 0; i < m_classLabels.size(); ++i)
-        {
-            label_yaml << m_classLabels[i];
-            if(i < m_classLabels.size()-1)
-                label_yaml << ", ";
-        }
-        label_yaml << "]";
-        m_classLabelsYaml.data = label_yaml.str();
-        m_classLabelsPublisher = nodeHandle.advertise<std_msgs::String>("class_labels", 1, 0);
-
-
         nodeHandle.param("threshold", m_threshold, (float)0.3);
         ROS_INFO_STREAM("Threshold: " << m_threshold);
         
@@ -62,6 +52,61 @@ public:
 
         ROS_INFO_STREAM("model: " << model);
         ROS_INFO_STREAM("configuration: " << configuration);
+
+        GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+        if(model.rfind(".onnx") == model.size()-5)
+        {
+            ROS_INFO_STREAM("Looking for class labels in .onnx file");
+            std::fstream input(model, std::ios::in | std::ios::binary);
+            if(!input)
+                ROS_WARN_STREAM("Unable to open " << model);
+            else
+            {
+                input.seekg(0, std::ios::end);
+                size_t length = input.tellg();
+                input.seekg(0, std::ios::beg);
+                std::vector<char> data(length);
+                input.read(data.data(), data.size());
+                onnx::ModelProto model_proto;
+                if(!model_proto.ParseFromArray(data.data(), data.size()))
+                    ROS_WARN_STREAM("Unable to parse " << model);
+                ROS_INFO_STREAM("metadata_prop_size: " << model_proto.metadata_props_size());
+                auto props = model_proto.metadata_props();
+                for(auto prop: props)
+                {
+                    ROS_INFO_STREAM("prop: " << prop.key() << " : " << prop.value());
+                    if(prop.key() == "names")
+                    {
+                        m_classLabelsYaml.data = prop.value();
+                        auto classes = YAML::Load(prop.value());
+                        if(classes.IsMap())
+                        {
+                            for(auto c: classes)
+                            {
+                                m_classLabels[c.first.as<int>()] = c.second.as<std::string>();
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+        if(nodeHandle.hasParam("class_names"))
+        {
+            nodeHandle.param("class_names", m_classLabelsYaml.data, m_classLabelsYaml.data);
+            auto classes_yaml = YAML::Load(m_classLabelsYaml.data);
+            if(classes_yaml.IsMap())
+            {
+                m_classLabels.clear();
+                for(auto c: classes_yaml)
+                    m_classLabels[c.first.as<int>()] = c.second.as<std::string>();
+            }
+        }
+
+        m_classLabelsPublisher = nodeHandle.advertise<std_msgs::String>("class_labels", 1, 0);
+
 
         try
         {
@@ -129,7 +174,7 @@ public:
     }
 
 private:
-    std::vector<std::string> m_classLabels;
+    std::map<int,std::string> m_classLabels;
     float m_threshold;
     cv::dnn::Net m_net;
     std::vector<std::string> m_output_names;
@@ -228,7 +273,7 @@ private:
                 cv::rectangle(cv_ptr->image, cv::Point(rect.x, rect.y), cv::Point(rect.x + rect.width, rect.y + rect.height), color, 3);
 
                 std::ostringstream label_ss;
-                if(m_classLabels.size() > c)
+                if(m_classLabels.find(c) != m_classLabels.end())
                     label_ss << m_classLabels[c];
                 else
                     label_ss << c;

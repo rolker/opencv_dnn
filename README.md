@@ -63,3 +63,8 @@ https://github.com/rolker/vision_opencv
 ## Weights
 
 See onnx model zoo
+
+
+## Parsing class labels from ONNX 
+
+The src/onnx/onnx.proto file was copied from: https://github.com/onnx/onnx/blob/main/onnx/onnx.proto
