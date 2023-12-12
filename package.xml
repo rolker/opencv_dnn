@@ -11,6 +11,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
+  <depend>pluginlib</depend>
   <depend>protobuf-dev</depend>
   <depend>roscpp</depend>
   <depend>sensor_msgs</depend>
@@ -18,5 +19,6 @@
   <depend>yaml-cpp</depend>
   
   <export>
+    <opencv_dnn plugin="${prefix}/plugins.xml"/>
   </export>
 </package>

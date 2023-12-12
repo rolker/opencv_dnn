@@ -1,0 +1,5 @@
+<library path="lib/libopencv_dnn_plugins">
+  <class type="opencv_dnn::YOLOv8Parser" base_class_type="opencv_dnn::DetectionsParser">
+    <description>Plugin to parse YOLOv8 detections.</description>
+  </class>
+</library>

@@ -1,5 +1,5 @@
 <launch>
-  <arg name="model" default="$(find opencv_dnn)/config/yolo.onnx"/>
+  <arg name="model" default="$(find opencv_dnn)/config/yolov8l.onnx"/>
   <arg name="threshold" default="0.3"/>
 
   <node pkg="video_stream_opencv" type="video_stream" name="video_stream"/>
