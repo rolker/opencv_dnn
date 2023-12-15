@@ -42,7 +42,7 @@ target_link_libraries(${PROJECT_NAME}_node
     yaml-cpp
 )
 
-add_library(opencv_dnn_plugins src/yolov8_parser.cpp)
+add_library(opencv_dnn_plugins src/yolov5_parser.cpp src/yolov8_parser.cpp)
 add_dependencies(opencv_dnn_plugins ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(opencv_dnn_plugins ${catkin_LIBRARIES})
 

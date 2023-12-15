@@ -2,4 +2,7 @@
   <class type="opencv_dnn::YOLOv8Parser" base_class_type="opencv_dnn::DetectionsParser">
     <description>Plugin to parse YOLOv8 detections.</description>
   </class>
+  <class type="opencv_dnn::YOLOv5Parser" base_class_type="opencv_dnn::DetectionsParser">
+    <description>Plugin to parse YOLOv5 detections.</description>
+  </class>
 </library>
