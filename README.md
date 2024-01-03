@@ -19,6 +19,10 @@ From https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#ubunt
     sudo dpkg -i cuda-keyring_1.1-1_all.deb
     sudo apt update
 
+Note, for Jetsons, use the appropriate architecture:
+
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/arm64/cuda-keyring_1.1-1_all.deb
+
 As of this writing, OpenCV will not build using Cuda 12.2, so install 12.1.
 
     sudo apt install cuda-12-1
