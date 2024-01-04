@@ -109,6 +109,20 @@ Node::Node()
     exit(1);
   }
 
+  bool using_cuda = false;
+  auto backends = cv::dnn::getAvailableBackends();
+  for (auto& backend: backends)
+  {
+    ROS_INFO_STREAM("backend/target" << backend.first << " " << backend.second);
+    if( backend.first == cv::dnn::DNN_BACKEND_CUDA && backend.second == cv::dnn::DNN_TARGET_CUDA)
+    {
+      net_.setPreferableBackend(cv::dnn::DNN_BACKEND_CUDA);
+      net_.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+      using_cuda = true;
+    }
+  }
+
+
   cv::dnn::MatShape net_input_shape;
   std::vector<cv::dnn::MatShape> in_shapes;
   std::vector<cv::dnn::MatShape> out_shapes;
@@ -128,6 +142,30 @@ Node::Node()
   net_output_names_ = net_.getUnconnectedOutLayersNames();
   for(auto out_name: net_output_names_)
     ROS_INFO_STREAM("  net output name: " << out_name);
+
+
+  if(using_cuda)
+  {
+    ROS_INFO_STREAM("CUDA detected so testing...");
+    cv::Mat blank_image(net_input_width_, net_input_height_, CV_8UC3, cv::Scalar(0,0,255));
+    cv::Mat blob;
+    std::vector<cv::Mat> detections;
+    cv::dnn::blobFromImage(blank_image, blob, 0.00392, cv::Size(net_input_width_, net_input_height_), cv::Scalar(), false , false, CV_32F);
+    net_.setInput(blob);
+    try
+    {
+      net_.forward(detections, net_output_names_);
+      ROS_INFO_STREAM("CUDA seems to work!");
+    }
+    catch (cv::Exception)
+    {
+      ROS_INFO_STREAM("CUDA does NOT seem to work.");
+      net_.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
+      net_.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+
+    }
+  }
+
 
   detections_publisher_ = pnh.advertise<vision_msgs::Detection2DArray>("detections", 1, 0);
         

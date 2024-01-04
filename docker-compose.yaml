@@ -1,0 +1,63 @@
+services:
+  opencv:
+    image: opencv_dnn:ros-opencv
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ros-opencv
+
+    # Interactive shell
+    stdin_open: true
+    tty: true
+    # Networking and IPC for ROS 2
+    network_mode: host
+    ipc: host
+
+  opencv_dnn:
+    extends: opencv
+    image: opencv_dnn:opencv_dnn
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: opencv_dnn
+    command: /bin/bash
+    devices:
+      - /dev/video0:/dev/video0
+
+  opencv_dnn-nvidia:
+    extends: opencv_dnn
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  dev:
+    extends: opencv_dnn
+    image: opencv_dnn:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: opencv_dnn_dev
+      args:
+        - UID=${UID:-1000}
+        - GID=${UID:-1000}
+        - USERNAME=${USERNAME:-devuser}
+    volumes:
+      - ./opencv_dnn:/catkin_ws/src/opencv_dnn:rw
+
+    user: ${USERNAME:-devuser}
+    command: sleep infinity
+
+  dev-nvidia:
+    extends: dev
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+

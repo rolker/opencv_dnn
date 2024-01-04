@@ -1,2 +1,2 @@
-config/*.weights
-config/*.onnx
+opencv_dnn/config/*.weights
+opencv_dnn/config/*.onnx

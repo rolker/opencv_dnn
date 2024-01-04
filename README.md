@@ -72,3 +72,21 @@ See onnx model zoo
 ## Parsing class labels from ONNX 
 
 The src/onnx/onnx.proto file was copied from: https://github.com/onnx/onnx/blob/main/onnx/onnx.proto
+
+## Docker
+
+To build the docker image.
+
+    docker compose build
+
+Start the dev container
+
+    docker compose up -d dev
+
+or
+
+    docker compose up -d dev-nvidia
+
+To open a shell in the dev container
+
+    docker exec -it opencv_dnn-dev-1 /bin/bash
