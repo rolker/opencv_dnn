@@ -157,9 +157,10 @@ Node::Node()
       net_.forward(detections, net_output_names_);
       ROS_INFO_STREAM("CUDA seems to work!");
     }
-    catch (cv::Exception)
+    catch (cv::Exception e)
     {
       ROS_INFO_STREAM("CUDA does NOT seem to work.");
+      ROS_WARN_STREAM(e.err);
       net_.setPreferableBackend(cv::dnn::DNN_BACKEND_DEFAULT);
       net_.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 

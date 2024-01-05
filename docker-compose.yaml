@@ -24,6 +24,21 @@ services:
     devices:
       - /dev/video0:/dev/video0
 
+  opencv_dnn-jetson:
+    extends: opencv_dnn
+    image: opencv_dnn:opencv_dnn-jetson
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: opencv_dnn-jetson
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
   opencv_dnn-nvidia:
     extends: opencv_dnn
     deploy:
@@ -33,6 +48,8 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+
+
 
   dev:
     extends: opencv_dnn
@@ -60,4 +77,16 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+
+  jetson-dev:
+    extends: dev-nvidia
+    image: opencv_dnn:jetson-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: opencv_dnn-jetson-dev
+      args:
+        - UID=${UID:-1000}
+        - GID=${UID:-1000}
+        - USERNAME=${USERNAME:-devuser}
 

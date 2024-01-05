@@ -122,3 +122,67 @@ RUN chown -R ${UID}:${GID} /catkin_ws/
 USER ${USERNAME}
 RUN echo "source /entrypoint.sh" >> /home/${USERNAME}/.bashrc
 RUN echo "export PS1=\"🐳 \e[0;34mopencv_dnn-dev\e[32m(\h)\e[0m \u:\w $ \"" >> /home/${USERNAME}/.bashrc
+
+
+#####################
+# jetson opencv_dnn node   #
+#####################
+
+
+FROM dustynv/ros:noetic-desktop-l4t-r35.4.1 as opencv_dnn-jetson
+
+SHELL [ "/bin/bash" , "-c" ]
+
+RUN apt-get install -y --no-install-recommends \
+        git
+
+RUN rosdep update
+
+RUN mkdir -p catkin_ws/src/opencv_dnn
+WORKDIR /catkin_ws
+
+COPY ./opencv_dnn ./src/opencv_dnn/
+
+RUN git clone -b noetic https://github.com/ros-perception/vision_opencv.git ./src/vision_opencv
+RUN git clone -b noetic-devel  https://github.com/ros-perception/image_common.git ./src/image_common
+
+RUN source /opt/ros/noetic/setup.bash && rosdep install -i -y --from-paths src
+RUN source /opt/ros/noetic/setup.bash && catkin_make
+
+COPY ./entrypoint.sh /
+ENTRYPOINT [ "/entrypoint.sh" ]
+
+
+#####################
+# Jetson Development Image #
+#####################
+
+
+FROM opencv_dnn-jetson as opencv_dnn-jetson-dev
+SHELL [ "/bin/bash" , "-c" ]
+
+ARG USERNAME=devuser
+ARG UID=1000
+ARG GID=${UID}
+
+# Install extra tools for development
+RUN apt-get update && apt-get install -y --no-install-recommends \
+ gdb gdbserver nano less ros-noetic-usb-cam
+
+ 
+# Create new user and home directory
+RUN groupadd --gid $GID $USERNAME \
+ && useradd --uid ${GID} --gid ${UID} --create-home ${USERNAME} \
+ && echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} \
+ && chmod 0440 /etc/sudoers.d/${USERNAME} \
+ && mkdir -p /home/${USERNAME} \
+ && chown -R ${UID}:${GID} /home/${USERNAME} \
+ && adduser ${USERNAME} video
+ 
+# Set the ownership of the overlay workspace to the new user
+RUN chown -R ${UID}:${GID} /catkin_ws/
+ 
+# Set the user and source entrypoint in the user's .bashrc file
+USER ${USERNAME}
+RUN echo "source /entrypoint.sh" >> /home/${USERNAME}/.bashrc
+RUN echo "export PS1=\"🐳 \e[0;34mopencv_dnn-dev\e[32m(\h)\e[0m \u:\w $ \"" >> /home/${USERNAME}/.bashrc
