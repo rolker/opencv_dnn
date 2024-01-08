@@ -32,16 +32,18 @@ vision_msgs::Detection2DArray YOLOv5Parser::parse(const std::vector<cv::Mat> &de
       auto width = detection.at<float>(i, j, 2)*x_scale;
       auto height = detection.at<float>(i, j, 3)*y_scale;
       cv::Rect rect(x - width/2, y - height/2, width, height);
-      for(int c = 5; c < detection.size[2]; c++)
-      {
-        int class_id = c - 5;
-        auto confidence = detection.at<float>(i,j,c);
-        if(confidence > context.threshold)
+      auto objectness = detection.at<float>(i, j, 4);
+      if(objectness >= context.threshold)
+        for(int c = 5; c < detection.size[2]; c++)
         {
-          boxes[class_id].push_back(rect);
-          scores[class_id].push_back(confidence);
+          int class_id = c - 5;
+          auto confidence = detection.at<float>(i,j,c);
+          if(confidence > context.threshold)
+          {
+            boxes[class_id].push_back(rect);
+            scores[class_id].push_back(confidence);
+          }
         }
-      }
     }
 
   std::vector<std::vector<int> > indices(class_count);

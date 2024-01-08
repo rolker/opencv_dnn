@@ -1,12 +1,14 @@
 <launch>
   <arg name="model" default="$(find opencv_dnn)/config/yolov8l.onnx"/>
   <arg name="threshold" default="0.3"/>
+  <arg name="detections_parser" default="opencv_dnn::YOLOv8Parser"/>
 
   <node pkg="video_stream_opencv" type="video_stream" name="video_stream"/>
 
   <node pkg="opencv_dnn" type="opencv_dnn_node" name="yolo" output="screen">
     <param name="model" value="$(arg model)"/>
     <param name="threshold" value="$(arg threshold)"/>
+    <param name="detections_parser" value="$(arg detections_parser)"/>
     <remap from="image" to="image_raw"/>
   </node>
 

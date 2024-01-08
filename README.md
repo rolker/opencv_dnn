@@ -1,5 +1,37 @@
 # ROS package for using OpenCV's DNN capability
 
+## Usage
+
+Plugins are used for processing the output on the network. Available plugins are:
+
+- opencv_dnn::YOLOv8Parser (default)
+- opencv_dnn::YOLOv5Parser
+
+### Topics
+
+Input topic:
+
+- image
+
+Output topics:
+
+- ~/detections
+- detection_image
+- ~/class_labels
+
+### Parameters
+
+- model
+- model_path
+- configuration
+- configuration_path
+- detections_parser
+- threshold
+- nms_threshold
+- class_names
+- input/width
+- input/height
+
 ## ROS noetic
 
 For building on Ubuntu 20.04, an updated OpenCV (4.5+) is needed.
