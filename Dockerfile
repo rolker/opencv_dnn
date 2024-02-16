@@ -137,6 +137,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
+        libboost-python-dev \
+        libprotobuf-dev protobuf-compiler libprotoc-dev \
+        libyaml-cpp-dev \
 && rm -rf /var/lib/apt/lists/*            
 
 RUN rosdep update
@@ -149,8 +152,8 @@ COPY ./opencv_dnn ./src/opencv_dnn/
 RUN git clone -b noetic https://github.com/ros-perception/vision_opencv.git ./src/vision_opencv
 RUN git clone -b noetic-devel  https://github.com/ros-perception/image_common.git ./src/image_common
 
-RUN source /opt/ros/noetic/setup.bash && apt-get update &&  rosdep install -i -y --from-paths src \
-&& rm -rf /var/lib/apt/lists/*
+# RUN source /opt/ros/noetic/setup.bash && apt-get update &&  rosdep install -i -y --from-paths src \
+# && rm -rf /var/lib/apt/lists/*
 RUN source /opt/ros/noetic/setup.bash && catkin_make
 
 COPY ./entrypoint.sh /
