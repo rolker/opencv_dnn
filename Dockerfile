@@ -133,8 +133,11 @@ FROM dustynv/ros:noetic-desktop-l4t-r35.4.1 as opencv_dnn-jetson
 
 SHELL [ "/bin/bash" , "-c" ]
 
-RUN apt-get install -y --no-install-recommends \
-        git
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+&& rm -rf /var/lib/apt/lists/*            
 
 RUN rosdep update
 
@@ -146,7 +149,8 @@ COPY ./opencv_dnn ./src/opencv_dnn/
 RUN git clone -b noetic https://github.com/ros-perception/vision_opencv.git ./src/vision_opencv
 RUN git clone -b noetic-devel  https://github.com/ros-perception/image_common.git ./src/image_common
 
-RUN source /opt/ros/noetic/setup.bash && rosdep install -i -y --from-paths src
+RUN source /opt/ros/noetic/setup.bash && apt-get update &&  rosdep install -i -y --from-paths src \
+&& rm -rf /var/lib/apt/lists/*
 RUN source /opt/ros/noetic/setup.bash && catkin_make
 
 COPY ./entrypoint.sh /
