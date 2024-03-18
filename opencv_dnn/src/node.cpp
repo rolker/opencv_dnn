@@ -23,8 +23,9 @@ Node::Node()
     ROS_ERROR_STREAM("Failed to load detections parser: " << detections_parser_type_ << " error: " << e.what());
   }
 
-  pnh.param("threshold", threshold_, threshold_);
+  pnh.param("obj_threshold", obj_threshold_, obj_threshold_);
   pnh.param("nms_threshold", nms_threshold_, nms_threshold_);
+  pnh.param("conf_threshold",conf_threshold_,conf_threshold_);
 
   std::string model, model_path;
   pnh.param("model", model, std::string());
@@ -40,7 +41,8 @@ Node::Node()
 
   ROS_INFO_STREAM("model: " << model);
   ROS_INFO_STREAM("config: " << configuration);
-  ROS_INFO_STREAM("threshold: " << threshold_ << " nms threshold: " << nms_threshold_ << " parser: " << detections_parser_type_);
+  ROS_INFO_STREAM("objectness threshold: " << obj_threshold_ << " nms threshold: " << nms_threshold_ << " confidence threshold" << conf_threshold_);
+  ROS_INFO_STREAM(" parser: " << detections_parser_type_);
 
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -210,8 +212,9 @@ void Node::imageCallback(const sensor_msgs::ImageConstPtr& msg)
   auto dnn_end = std::chrono::steady_clock::now();
 
   opencv_dnn::DetectionsContext context;
-  context.threshold = threshold_;
+  context.obj_threshold = obj_threshold_;
   context.nms_threshold = nms_threshold_;
+  context.conf_threshold = conf_threshold_;
   context.source_image_width = msg->width;
   context.source_image_height = msg->height;
   context.network_input_width = net_input_width_;

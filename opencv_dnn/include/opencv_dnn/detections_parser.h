@@ -13,8 +13,9 @@ struct DetectionsContext
   int source_image_height;
   int network_input_width;
   int network_input_height;
-  float threshold;
+  float obj_threshold;
   float nms_threshold;
+  float conf_threshold;
 };
 
 class DetectionsParser

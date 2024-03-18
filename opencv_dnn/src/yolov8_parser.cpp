@@ -36,7 +36,7 @@ vision_msgs::Detection2DArray YOLOv8Parser::parse(const std::vector<cv::Mat> &de
       {
         int class_id = c - 4;
         auto confidence = detection.at<float>(i,c,j);
-        if(confidence > context.threshold)
+        if(confidence > context.conf_threshold)
         {
           boxes[class_id].push_back(rect);
           scores[class_id].push_back(confidence);
