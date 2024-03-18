@@ -1,0 +1,24 @@
+<launch>
+  <arg name="model" default="$(find opencv_dnn)/config/best07262023.onnx"/>
+  <arg name="threshold" default="0.3"/>
+  <arg name="bag_file"/>
+  <arg name="new_bag"/>
+  <arg name="image_topic" default="image_raw"/>
+  <arg name="start_time" default="0"/>
+
+  <!-- Play recorded bag-->
+  <node pkg="rosbag" type="play" name="bagplay" args="--start=$(arg start_time) $(arg bag_file)">
+  </node>
+
+  <!-- Launch detection node -->
+  <node pkg="opencv_dnn" type="opencv_dnn_node" name="yolo">
+    <param name="model" value="$(arg model)"/>
+    <param name="threshold" value="$(arg threshold)"/>
+    <param name="detections_parser" value="opencv_dnn::YOLOv5Parser"/>
+    <remap from="image" to="$(arg image_topic)"/>
+  </node>
+
+  <!-- Record new bag-->
+  <node name="record" pkg="rosbag" type="record" args="-a -O ~/Desktop/new_bags/$(arg new_bag)"/>
+
+</launch>

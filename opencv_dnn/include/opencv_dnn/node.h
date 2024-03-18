@@ -46,8 +46,9 @@ private:
   boost::shared_ptr<opencv_dnn::DetectionsParser> detections_parser_;
   pluginlib::ClassLoader<opencv_dnn::DetectionsParser> parser_loader_;
 
-  float threshold_ = 0.5;
+  float obj_threshold_ = 0.2;
   float nms_threshold_ = 0.4;
+  float conf_threshold_ = 0.4;
 
   ros::Publisher detections_publisher_;
 
